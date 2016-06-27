@@ -246,6 +246,7 @@ respectively.
         },
 
         listeners: {
+          'blur': '_onBlur',
           'tap': '_onTap'
         },
 
@@ -287,6 +288,13 @@ respectively.
          */
         open: function() {
           this.$.menuButton.open();
+        },
+
+        /**
+         * Cancel the dropdown.
+         */
+        cancel: function() {
+          this.$.menuButton.cancel();
         },
 
         /**
@@ -375,6 +383,36 @@ respectively.
           if (e) {
             e.setAttribute('aria-expanded', openState);
           }
+        },
+
+        _onBlur: function(event) {
+          this._blurElementInTree(event);
+        },
+
+        // Note: in this function, "this" refers to the paper-dropdown-menu
+        // component, even when this function is being invoked to in response
+        // to a sub-element losing focus.
+        _blurElementInTree: function(event) {
+          if (event.target._blurListener) {
+            // Stop listening to blur events on the target.
+            console.log(`Stopping listening to blur events on ${event.target.localName}`);
+            event.target.removeEventListener('blur', event.target._blurListener);
+          }
+          setTimeout(function() {
+            let newActiveElement = this.shadowRoot.activeElement;
+            console.log(newActiveElement);
+            if (newActiveElement) {
+              // An element within our tree has the focus. Ask to be notified
+              // when that element loses focus.
+              console.log(`Listening to blur events on ${newActiveElement.localName}`);
+              newActiveElement._blurListener = this._blurElementInTree.bind(this);
+              newActiveElement.addEventListener('blur', newActiveElement._blurListener);
+            } else if (this.opened) {
+              // The focus moved outside of us, so cancel the dropdown.
+              console.log(`Cancelling dropdown`);
+              this.cancel();
+            }
+          }.bind(this));
         }
       });
     })();
