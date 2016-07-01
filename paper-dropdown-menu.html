@@ -246,7 +246,7 @@ respectively.
         },
 
         listeners: {
-          'blur': '_onBlur',
+          'iron-overlay-opened': '_onOverlayOpened',
           'tap': '_onTap'
         },
 
@@ -385,34 +385,47 @@ respectively.
           }
         },
 
-        _onBlur: function(event) {
-          this._blurElementInTree(event);
-        },
-
         // Note: in this function, "this" refers to the paper-dropdown-menu
         // component, even when this function is being invoked to in response
         // to a sub-element losing focus.
-        _blurElementInTree: function(event) {
+        _blurElementInDropdown: function(event) {
           if (event.target._blurListener) {
             // Stop listening to blur events on the target.
-            console.log(`Stopping listening to blur events on ${event.target.localName}`);
+            console.log(`paper-dropdown-menu: stopping listening to blur events on ${event.target.localName}`);
             event.target.removeEventListener('blur', event.target._blurListener);
           }
-          setTimeout(function() {
-            let newActiveElement = this.shadowRoot.activeElement;
-            console.log(newActiveElement);
-            if (newActiveElement) {
-              // An element within our tree has the focus. Ask to be notified
-              // when that element loses focus.
-              console.log(`Listening to blur events on ${newActiveElement.localName}`);
-              newActiveElement._blurListener = this._blurElementInTree.bind(this);
-              newActiveElement.addEventListener('blur', newActiveElement._blurListener);
-            } else if (this.opened) {
-              // The focus moved outside of us, so cancel the dropdown.
-              console.log(`Cancelling dropdown`);
-              this.cancel();
-            }
-          }.bind(this));
+          this._trackBlurWithinDropdown();
+        },
+
+        _trackBlurWithinDropdown() {
+          var dropdown = this.contentElement;
+          if (dropdown) {
+            setTimeout(function() {
+              var activeElement = dropdown.shadowRoot ?
+                dropdown.shadowRoot.activeElement :
+                document.activeElement;
+              var focusWithinDropdown = dropdown.shadowRoot ?
+                activeElement !== null :
+                Polymer.dom(dropdown).deepContains(activeElement);
+              console.log(`paper-dropdown-menu: activeElement = ${activeElement && activeElement.localName}, focusWithinDropdown = ${focusWithinDropdown}`);
+              if (focusWithinDropdown) {
+                // An element within the subelement's tree has the focus. Ask to
+                // be notified when that element loses focus.
+                console.log(`paper-dropdown-menu: listening to blur events on ${activeElement.localName}`);
+                activeElement._blurListener = this._blurElementInDropdown.bind(this);
+                activeElement.addEventListener('blur', activeElement._blurListener);
+              } else if (this.opened) {
+                // The focus moved outside of the dropdown, so cancel it.
+                console.log(`paper-dropdown-menu: cancelling dropdown`);
+                this.cancel();
+              }
+            }.bind(this));
+          }
+        },
+
+        _onOverlayOpened: function() {
+          console.log(`paper-dropdown-menu: got iron-overlay-opened`);
+          this._trackBlurWithinDropdown();
         }
       });
     })();
