@@ -391,13 +391,13 @@ respectively.
         _blurElementInDropdown: function(event) {
           if (event.target._blurListener) {
             // Stop listening to blur events on the target.
-            console.log(`paper-dropdown-menu: stopping listening to blur events on ${event.target.localName}`);
+            // console.log('paper-dropdown-menu: stopping listening to blur events on ' + event.target.localName);
             event.target.removeEventListener('blur', event.target._blurListener);
           }
           this._trackBlurWithinDropdown();
         },
 
-        _trackBlurWithinDropdown() {
+        _trackBlurWithinDropdown: function() {
           var dropdown = this.contentElement;
           if (dropdown) {
             setTimeout(function() {
@@ -407,16 +407,16 @@ respectively.
               var focusWithinDropdown = dropdown.shadowRoot ?
                 activeElement !== null :
                 Polymer.dom(dropdown).deepContains(activeElement);
-              console.log(`paper-dropdown-menu: activeElement = ${activeElement && activeElement.localName}, focusWithinDropdown = ${focusWithinDropdown}`);
+              // console.log('paper-dropdown-menu: activeElement = ' + activeElement && activeElement.localName + ', focusWithinDropdown = ' + focusWithinDropdown);
               if (focusWithinDropdown) {
                 // An element within the subelement's tree has the focus. Ask to
                 // be notified when that element loses focus.
-                console.log(`paper-dropdown-menu: listening to blur events on ${activeElement.localName}`);
+                // console.log('paper-dropdown-menu: listening to blur events on ' + activeElement.localName);
                 activeElement._blurListener = this._blurElementInDropdown.bind(this);
                 activeElement.addEventListener('blur', activeElement._blurListener);
               } else if (this.opened) {
                 // The focus moved outside of the dropdown, so cancel it.
-                console.log(`paper-dropdown-menu: cancelling dropdown`);
+                // console.log('paper-dropdown-menu: cancelling dropdown');
                 this.cancel();
               }
             }.bind(this));
@@ -424,7 +424,7 @@ respectively.
         },
 
         _onOverlayOpened: function() {
-          console.log(`paper-dropdown-menu: got iron-overlay-opened`);
+          // console.log('paper-dropdown-menu: got iron-overlay-opened');
           this._trackBlurWithinDropdown();
         }
       });
